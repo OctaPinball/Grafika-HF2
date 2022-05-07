@@ -1,13 +1,33 @@
 #version 330 core
 
-const float PI = 3.141592654;
+const float PI = 3.14159265359;
 const float AMBIENT = 0.07;
 const float LENGHT = 1;
+const float SHININESS = 80;
 
 in vec2 texCoord;
 uniform float frame;
 
 out vec4 fragColor;
+
+struct Ray{
+    vec3 position, direction;
+};
+
+struct Sphere{
+    vec3 position;
+    float radius;
+};
+
+struct Cylinder{
+    vec3 position;
+    float radius, height;
+};
+
+struct Paraboloid{
+    vec3 position;
+    float height;
+};
 
 vec4 quat(vec3 a, float angle) {
     float halfAngle = angle / 2;
@@ -292,8 +312,10 @@ void main() {
     toLight /= distToLight;
     if (t > 0.0) {
         float cosTheta = max(dot(toLight, normal), 0.0);
+        vec3 halfway = normalize(-rayDir + toLight + vec3(0,0,0.5));
+        float cosDelta = dot(normal, halfway);
         vec3 _;
-        float lightT = intersectWorld(hitPos + normal * 0.0001, toLight, _);
+        float lightT = intersectWorld(hitPos + normal * 0.01, toLight, _);
         float lightIntensity = 40.0;
         if (lightT >= 0.0) {
             lightIntensity = 0.0;
@@ -302,7 +324,9 @@ void main() {
         {
             fragColor = vec4(0, 0, 0, 1);
         }
-        fragColor += vec4(vec3(1.0, 0.0, 1.0) * cosTheta / pow(distToLight, 2.0) * lightIntensity + AMBIENT, 1);
+        fragColor += vec4((vec3(1.0, 0.0, 1.0) * cosTheta / pow(distToLight, 2.0) ) * lightIntensity + AMBIENT, 1);
+        fragColor += vec4(vec3(1.0, 1.0, 1.0) * pow(cosDelta, SHININESS) * lightIntensity, 1);
+        //fragColor += vec4(vec3(1.0, 1.0, 1.0) * pow(cosTheta, SHININESS) * lightIntensity, 1);
     }
     //lampPoint = vec3(1,1,1);
     vec3 toLight2 = lampPoint - hitPos;
