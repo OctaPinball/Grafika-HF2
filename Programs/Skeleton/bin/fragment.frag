@@ -203,38 +203,36 @@ float intersectWorld(vec3 origin, vec3 rayDir, out vec3 normal) {
     float tPlane2 = intersectCPlane(rotOrigin, rotRayDir, vec3(0, 0, 0), 1.2, plane2Normal);
 
     //Finished 1. Rud
-    vec4 qSegment1 = quat(normalize(vec3(0, 1, 0)), time);
-    vec3 rotOriginSegment1 = quatRot(qSegment1, origin);
-    vec3 rotRayDirSegment1 = quatRot(qSegment1, rayDir);
     vec3 rotLineSegment1 = vec3(0,3,1);
-    vec4 cyl3Q = quat(normalize(rotLineSegment1), time * 4);
-    vec3 cyl3RotOrigin = quatRot(cyl3Q, rotOriginSegment1);
-    vec3 cyl3RotRay = quatRot(cyl3Q, rotRayDirSegment1);
+    vec4 qSegment1 = quat(normalize(rotLineSegment1), time * 4);
+    vec3 rotOriginSegment1 = quatRot(qSegment1, rotOrigin);
+    vec3 rotRayDirSegment1 = quatRot(qSegment1, rotRayDir);
     vec3 cyl3Normal;
-    float tCy3l = intersectCylinder(cyl3RotOrigin, cyl3RotRay, vec3(0, 0, 0), 0.05, 1.5, cyl3Normal);
-    cyl3Normal = quatRot(quatInv(q), cyl3Normal);
+    float tCy3l = intersectCylinder(rotOriginSegment1, rotRayDirSegment1, vec3(0, 0, 0), 0.05, 1.5, cyl3Normal);
+    cyl3Normal = quatRot(quatInv(qSegment1), cyl3Normal);
     cyl3Normal = quatRot(quatInv(q), cyl3Normal);
 
-    //Finished 1. Gomb
+    //Finished 2. Gomb
     vec3 sph4Normal;
-    float tSph4 = intersectSphere(cyl3RotOrigin, cyl3RotRay, vec3(0, 1.5, 0), 0.15, sph4Normal);
+    float tSph4 = intersectSphere(rotOriginSegment1, rotRayDirSegment1, vec3(0, 1.5, 0), 0.15, sph4Normal);
+    sph4Normal = quatRot(quatInv(qSegment1), sph4Normal);
     sph4Normal = quatRot(quatInv(q), sph4Normal);
 
     //Finished 2. Rud
-    vec4 qSegment2 = quat(normalize(vec3(0, 1, 0)), time);
-    vec3 rotOriginSegment2 = quatRot(qSegment2, cyl3RotOrigin + vec3(0,-1.5,0));
-    vec3 rotRayDirSegment2 = quatRot(qSegment2, cyl3RotRay);
-    vec4 cyl5Q = quat(normalize(vec3(0,1,1)), time * 4);
-    vec3 cyl5RotOrigin = quatRot(cyl5Q, rotOriginSegment2);
-    vec3 cyl5RotRay = quatRot(cyl5Q, rotRayDirSegment2);
+    vec4 qSegment2 = quat(normalize(vec3(0,1,1)), time * 4);
+    vec3 rotOriginSegment2 = quatRot(qSegment2, rotOriginSegment1 + vec3(0,-1.5,0));
+    vec3 rotRayDirSegment2 = quatRot(qSegment2, rotRayDirSegment1);
     vec3 cyl5Normal;
-    float tCy5l = intersectCylinder(cyl5RotOrigin, cyl5RotRay, vec3(0, 0, 0), 0.05, 1.5, cyl5Normal);
+    float tCy5l = intersectCylinder(rotOriginSegment2, rotRayDirSegment2, vec3(0, 0, 0), 0.05, 1.5, cyl5Normal);
+    cyl5Normal = quatRot(quatInv(qSegment2), cyl5Normal);
+    cyl5Normal = quatRot(quatInv(qSegment1), cyl5Normal);
     cyl5Normal = quatRot(quatInv(q), cyl5Normal);
 
-    //Finished 3. Rud
+
+    //Finished 3. Rud NEM HASZNÁLT!!!
     vec4 qSegment3 = quat(normalize(vec3(0, 1, 0)), time);
-    vec3 rotOriginSegment3 = quatRot(qSegment3, cyl5RotOrigin + vec3(0,-1.5,0));
-    vec3 rotRayDirSegment3 = quatRot(qSegment3, cyl5RotRay);
+    vec3 rotOriginSegment3 = quatRot(qSegment3, rotOriginSegment2 + vec3(0,-1.5,0));
+    vec3 rotRayDirSegment3 = quatRot(qSegment3, rotRayDirSegment2);
     vec4 cyl6Q = quat(normalize(vec3(1,2,1)), time * 4);
     vec3 cyl6RotOrigin = quatRot(cyl6Q, rotOriginSegment3);
     vec3 cyl6RotRay = quatRot(cyl6Q, rotRayDirSegment3);
@@ -242,10 +240,14 @@ float intersectWorld(vec3 origin, vec3 rayDir, out vec3 normal) {
     float tCy6l = intersectCylinder(cyl6RotOrigin, cyl6RotRay, vec3(0, 0, 0), 0.05, 1.5, cyl6Normal);
     cyl6Normal = quatRot(quatInv(q), cyl6Normal);
 
-    //Teszt Gomb
+    //Teszt 3. Gomb
     vec3 sph2Normal;
-    float tSph2 = intersectSphere(cyl5RotOrigin, cyl5RotRay, vec3(0, 1.5, 0), 0.2, sph2Normal);
+    float tSph2 = intersectSphere(rotOriginSegment2, rotRayDirSegment2, vec3(0, 1.5, 0), 0.2, sph2Normal);
+    sph2Normal = quatRot(quatInv(qSegment2), sph2Normal);
+    sph2Normal = quatRot(quatInv(qSegment1), sph2Normal);
     sph2Normal = quatRot(quatInv(q), sph2Normal);
+
+    
 
     //Teszt Para
     vec4 qSegment4 = quat(normalize(vec3(0, 1, 0)), time);
@@ -316,7 +318,7 @@ void main() {
         {
             fragColor = vec4(0, 0, 0, 1);
         }
-        fragColor += vec4(vec3(1.0, 0.0, 0.0) * cosTheta / pow(distToLight, 2.0) * lightIntensity + AMBIENT, 1);
+        fragColor += vec4(vec3(1.0, 0.0, 1.0) * cosTheta / pow(distToLight, 2.0) * lightIntensity + AMBIENT, 1);
     }
     //lampPoint = vec3(1,1,1);
     vec3 toLight2 = lampPoint - hitPos;
@@ -331,9 +333,9 @@ void main() {
             light2Intensity = 0.0;
         }
         
-        fragColor += vec4(vec3(1.0, 0, 1.0) * cosTheta2 / pow(distToLight2, 2.0) * light2Intensity + AMBIENT, 1);
+        //fragColor += vec4(vec3(1.0, 0, 1.0) * cosTheta2 / pow(distToLight2, 2.0) * light2Intensity + AMBIENT, 1);
     } else {
-        fragColor = vec4(0, 0, 0, 1);
+        //fragColor = vec4(0, 0, 0, 1);
     }
     
 }
