@@ -202,6 +202,10 @@ float intersectWorld(vec3 origin, vec3 rayDir, out vec3 normal) {
     vec3 plane2Normal = vec3(0,1,0);
     float tPlane2 = intersectCPlane(rotOrigin, rotRayDir, vec3(0, 0, 0), 1.2, plane2Normal);
 
+    //1. Gomb
+    vec3 sphNormal;
+    float tSph = intersectSphere(origin, rayDir, vec3(0, 0, 0), 0.15, sphNormal);
+
     //Finished 1. Rud
     vec3 rotLineSegment1 = vec3(0,3,1);
     vec4 qSegment1 = quat(normalize(rotLineSegment1), time * 4);
@@ -228,18 +232,6 @@ float intersectWorld(vec3 origin, vec3 rayDir, out vec3 normal) {
     cyl5Normal = quatRot(quatInv(qSegment1), cyl5Normal);
     cyl5Normal = quatRot(quatInv(q), cyl5Normal);
 
-
-    //Finished 3. Rud NEM HASZNÁLT!!!
-    vec4 qSegment3 = quat(normalize(vec3(0, 1, 0)), time);
-    vec3 rotOriginSegment3 = quatRot(qSegment3, rotOriginSegment2 + vec3(0,-1.5,0));
-    vec3 rotRayDirSegment3 = quatRot(qSegment3, rotRayDirSegment2);
-    vec4 cyl6Q = quat(normalize(vec3(1,2,1)), time * 4);
-    vec3 cyl6RotOrigin = quatRot(cyl6Q, rotOriginSegment3);
-    vec3 cyl6RotRay = quatRot(cyl6Q, rotRayDirSegment3);
-    vec3 cyl6Normal;
-    float tCy6l = intersectCylinder(cyl6RotOrigin, cyl6RotRay, vec3(0, 0, 0), 0.05, 1.5, cyl6Normal);
-    cyl6Normal = quatRot(quatInv(q), cyl6Normal);
-
     //Teszt 3. Gomb
     vec3 sph2Normal;
     float tSph2 = intersectSphere(rotOriginSegment2, rotRayDirSegment2, vec3(0, 1.5, 0), 0.2, sph2Normal);
@@ -247,37 +239,29 @@ float intersectWorld(vec3 origin, vec3 rayDir, out vec3 normal) {
     sph2Normal = quatRot(quatInv(qSegment1), sph2Normal);
     sph2Normal = quatRot(quatInv(q), sph2Normal);
 
-    
 
-    //Teszt Para
-    vec4 qSegment4 = quat(normalize(vec3(0, 1, 0)), time);
-    vec3 rotOriginSegment4 = quatRot(qSegment4, cyl6RotOrigin + vec3(0,0,0));
-    vec3 rotRayDirSegment4 = quatRot(qSegment4, cyl6RotRay);
-    vec4 cyl7Q = quat(normalize(vec3(0,4,1)), time * 4);
-    vec3 cyl7RotOrigin = quatRot(cyl7Q, rotOriginSegment4);
-    vec3 cyl7RotRay = quatRot(cyl7Q, rotRayDirSegment4);
+    //Old Para
+
+    vec4 qSegment3 = quat(normalize(vec3(0,4,1)), time * 4);
+    vec3 rotOriginSegment3 = quatRot(qSegment3, rotOriginSegment2 + vec3(0,-1.5,0));
+    vec3 rotRayDirSegment3 = quatRot(qSegment3, rotRayDirSegment2);
     vec3 parNormal;
-    float tPar = intersectPara(cyl7RotOrigin, cyl7RotRay, vec3(0, 0, 0), 0.55, parNormal);
+    float tPar = intersectPara(rotOriginSegment3, rotRayDirSegment3, vec3(0, 0, 0), 0.55, parNormal);
+    parNormal = quatRot(quatInv(qSegment3), parNormal);
+    parNormal = quatRot(quatInv(qSegment2), parNormal);
+    parNormal = quatRot(quatInv(qSegment1), parNormal);
     parNormal = quatRot(quatInv(q), parNormal);
 
 
-    lampPoint = quatRot(quatInv(cyl7Q), lampPoint);
-
-
-    //1. Gomb
-    vec3 sphNormal;
-    float tSph = intersectSphere(origin, rayDir, vec3(0, 0, 0), 0.15, sphNormal);
-
-    
-
+    lampPoint = quatRot(quatInv(qSegment3), lampPoint);
     
     float t = combine(tPlane2, tSph, plane2Normal, sphNormal, normal);
     t = combine(t, tCy1l, normal, cyl1Normal, normal);
     t = combine(t, tSph2, normal, sph2Normal, normal);
-    t = combine(t, tPar, normal, parNormal, normal);
     t = combine(t, tCy3l, normal, cyl3Normal, normal); //Teszt Rud
     t = combine(t, tSph4, normal, sph4Normal, normal); //Teszt Gomb
     t = combine(t, tCy5l, normal, cyl5Normal, normal); //Teszt Rud2
+    t = combine(t, tPar, normal, parNormal, normal);
 
     return combine(t, tPlane, normal, planeNormal, normal);
 }
